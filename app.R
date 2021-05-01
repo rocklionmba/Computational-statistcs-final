@@ -1,11 +1,3 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
 if(!require(shiny)) install.packages("shiny")
 if(!require(leaps)) install.packages("leaps")
 if(!require(class)) install.packages("class")
@@ -21,13 +13,10 @@ library(ggplot2)
 library(ISLR)
 
 
-# Define UI for application that draws a histogram
 ui <- fluidPage(
 
-    # Application title
     titlePanel("Find best linear model"),
 
-    # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
             selectInput("featureSelection", "Choose with feature selection to run:",
@@ -42,7 +31,6 @@ ui <- fluidPage(
             p("Note: If copying the formula for a model, do not include the NA in the formula.")
         ),
         
-        # Show a plot of the generated distribution
         mainPanel(
             tabsetPanel(
                 tabPanel("r2",
@@ -65,7 +53,6 @@ ui <- fluidPage(
     )
 )
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
     getDataSetFrame = function (){
         dataSetFrame = NULL
@@ -136,5 +123,4 @@ server <- function(input, output) {
     })
 }
 
-# Run the application 
 shinyApp(ui = ui, server = server)
