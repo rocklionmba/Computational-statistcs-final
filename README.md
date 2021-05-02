@@ -3,6 +3,10 @@
 ## Introduction
 This program is to find the best combination of features for a linear model depending on the response variables. It does this by runnning `regsubsets` and then finding the largest $R^2$ and smallest BIC and C_P, which are all common ways of estimating the test MSE differently. From there, it extracts the formula and provides it to the user. The user can change the selection method, dataset, and responce to develop an equation.
 
+## Running online
+If you wish to run it online, visit this URL:
+https://rocklionmba.shinyapps.io/computational-statistcs-final-main/
+
 ## Running on R
 If you want to run it on your own, please run the below code:
 ```r
