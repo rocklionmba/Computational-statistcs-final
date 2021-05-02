@@ -1,12 +1,11 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+if(!require(shiny)) install.packages("shiny")
+if(!require(leaps)) install.packages("leaps")
+if(!require(class)) install.packages("class")
+if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(ISLR)) install.packages("ISLR")
+if(!require(tidyverse)) install.packages('tidyverse')
 
+library(tidyverse)
 library(shiny)
 library(leaps)
 library(class)
@@ -14,13 +13,10 @@ library(ggplot2)
 library(ISLR)
 
 
-# Define UI for application that draws a histogram
 ui <- fluidPage(
 
-    # Application title
     titlePanel("Find best linear model"),
 
-    # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
             selectInput("featureSelection", "Choose with feature selection to run:",
@@ -30,11 +26,11 @@ ui <- fluidPage(
             selectInput("dataSet", "Choose which dataset to use",
                                c("College" = "College",
                                  "Hitters" = "Hitters",
-                                 "Auto" = "Auto")),
+                                 "Diamonds" = "Diamonds")),
             textInput("responseName","Enter the response name"),
+            p("Note: If copying the formula for a model, do not include the NA in the formula.")
         ),
         
-        # Show a plot of the generated distribution
         mainPanel(
             tabsetPanel(
                 tabPanel("r2",
@@ -57,19 +53,24 @@ ui <- fluidPage(
     )
 )
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
-    get_features = function(){
-        modelFormula = as.formula(paste(input$responseName,"~."))
+    getDataSetFrame = function (){
+        dataSetFrame = NULL
         if(input$dataSet == "College"){
             dataSetFrame = College
         }
         else if (input$dataSet == "Hitters"){
             dataSetFrame = Hitters
         }
-        else if (input$dataSet == "Auto"){
-            dataSetFrame = Auto
+        else if (input$dataSet == "Diamonds"){
+            dataSetFrame = diamonds
         }
+        return(dataSetFrame)
+    }
+    
+    get_features = function(){
+        modelFormula = as.formula(paste(input$responseName,"~."))
+        dataSetFrame = getDataSetFrame()
         validate(need(colnames(dataSetFrame) %in% input$responseName,"There is no column with this name."))
         modelFormula = as.formula(paste(input$responseName,"~."))
         
@@ -85,66 +86,41 @@ server <- function(input, output) {
     output$r2Plot <- renderPlot({
         selectionResults = get_features()
         
-        ggplot(mapping = aes(x = selectionResults$adjr2,y = 1:length(selectionResults$adjr2))) + geom_point(mapping = aes(x = selectionResults$adjr2,y = 1:length(selectionResults$adjr2))) +  geom_point(mapping = aes(x = max(selectionResults$adjr2),y = which.max(selectionResults$adjr2)), color="red",size = 3)
+        ggplot(mapping = aes(x = selectionResults$adjr2,y = 1:length(selectionResults$adjr2))) + geom_point(mapping = aes(x = selectionResults$adjr2,y = 1:length(selectionResults$adjr2))) +  geom_point(mapping = aes(x = max(selectionResults$adjr2),y = which.max(selectionResults$adjr2)), color="red",size = 3)+ labs(x="R^2", y="")
     })
     
     output$bicPlot <- renderPlot({
         selectionResults = get_features()
         
-        ggplot(mapping = aes(x = selectionResults$bic,y = 1:length(selectionResults$bic))) + geom_point(mapping = aes(x = selectionResults$bic,y = 1:length(selectionResults$bic))) +  geom_point(mapping = aes(x = min(selectionResults$bic),y = which.min(selectionResults$bic)), color="red",size = 3)
+        ggplot(mapping = aes(x = selectionResults$bic,y = 1:length(selectionResults$bic))) + geom_point(mapping = aes(x = selectionResults$bic,y = 1:length(selectionResults$bic))) +  geom_point(mapping = aes(x = min(selectionResults$bic),y = which.min(selectionResults$bic)), color="red",size = 3)+ labs(x="BIC", y="")
     })
     
     output$cpPlot <- renderPlot({
         selectionResults = get_features()
         
-        ggplot(mapping = aes(x = selectionResults$cp,y = 1:length(selectionResults$cp))) + geom_point(mapping = aes(x = selectionResults$cp,y = 1:length(selectionResults$cp))) +  geom_point(mapping = aes(x = min(selectionResults$cp),y = which.min(selectionResults$cp)), color="red",size = 3)
+        ggplot(mapping = aes(x = selectionResults$cp,y = 1:length(selectionResults$cp))) + geom_point(mapping = aes(x = selectionResults$cp,y = 1:length(selectionResults$cp))) +  geom_point(mapping = aes(x = min(selectionResults$cp),y = which.min(selectionResults$cp)), color="red",size = 3)+ labs(x="C_P", y="")
     })
     output$r2Formula <- renderText({
         selectionResults = get_features()
-        if(input$dataSet == "College"){
-            dataSetFrame = College
-        }
-        else if (input$dataSet == "Hitters"){
-            dataSetFrame = Hitters
-        }
-        else if (input$dataSet == "Auto"){
-            dataSetFrame = Auto
-        }
+        dataSetFrame = getDataSetFrame()
         dataSetColNames = colnames(dataSetFrame)
         dataSetColNames = dataSetColNames[!dataSetColNames %in% input$responseName]
         paste(input$responseName,paste("~",paste(dataSetColNames[selectionResults$which[which.max(selectionResults$adjr2),-1]],collapse="+"),sep = ""))
     })
     output$bicFormula <- renderText({
         selectionResults = get_features()
-        if(input$dataSet == "College"){
-            dataSetFrame = College
-        }
-        else if (input$dataSet == "Hitters"){
-            dataSetFrame = Hitters
-        }
-        else if (input$dataSet == "Auto"){
-            dataSetFrame = Auto
-        }
+        dataSetFrame = getDataSetFrame()
         dataSetColNames = colnames(dataSetFrame)
         dataSetColNames = dataSetColNames[!dataSetColNames %in% input$responseName]
         paste(input$responseName,paste("~",paste(dataSetColNames[selectionResults$which[which.min(selectionResults$bic),-1]],collapse="+"),sep = ""))
     })
     output$cpFormula <- renderText({
         selectionResults = get_features()
-        if(input$dataSet == "College"){
-            dataSetFrame = College
-        }
-        else if (input$dataSet == "Hitters"){
-            dataSetFrame = Hitters
-        }
-        else if (input$dataSet == "Auto"){
-            dataSetFrame = Auto
-        }
+        dataSetFrame = getDataSetFrame()
         dataSetColNames = colnames(dataSetFrame)
         dataSetColNames = dataSetColNames[!dataSetColNames %in% input$responseName]
         paste(input$responseName,paste("~",paste(dataSetColNames[selectionResults$which[which.min(selectionResults$cp),-1]],collapse="+"),sep = ""))
     })
 }
 
-# Run the application 
 shinyApp(ui = ui, server = server)
